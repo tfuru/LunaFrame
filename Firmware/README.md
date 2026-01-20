@@ -1,38 +1,37 @@
 # PopLinkBadge
 
-PopLinkBadgeは、ESP32-S3マイクロコントローラと円形ディスプレイGC9A01を搭載したバッジ型デバイスです。  
+PopLinkBadgeは、ESP32-C3 マイクロコントローラと円形ディスプレイGC9A01を搭載したバッジ型デバイスです。  
 Wi-Fi APモードで動作し、表示画像をスマートフォンなどから簡単に更新できます。  
 
 このディレクトリは、PopLinkBadgeのファームウェアソースコードを格納しています。
 
 ## 特徴
-- ESP32-S3搭載
+- ESP32-C3搭載 (Seeed XIAO ESP32C3)
 - GC9A01 円形LCDディスプレイ (240x240)
 - Wi-Fi APモードによる簡単な画像更新
-- 表示画像フォーマット: PNG (240x240)
 - 表示画像フォーマット: PNG (240x240)
 
 ## ハードウェア構成
 
 ### メインIC
-- Microcontroller: ESP32-S3
+- Microcontroller: ESP32-C3 (Seeed XIAO ESP32C3)
 - Display: GC9A01
 
 ### 接続ピン
-| GC9A01 Pin | ESP32-S3 GPIO |
-| :--- | :--- |
-| VCC | 3.3V |
-| GND | GND |
-| SCL (SCLK) | 7 |
-| SDA (MOSI) | 9 |
-| DC | 8 |
-| CS | 6 |
-| RES (RST) | 5 |
+| GC9A01 Pin | ESP32-C3 GPIO | Note |
+| :--- | :--- | :--- |
+| VCC | 3.3V | |
+| GND | GND | |
+| SCL (SCLK) | D7 | |
+| SDA (MOSI) | D9 | |
+| DC | D8 | |
+| CS | D6 | |
+| RES (RST) | D5 | |
 
 ## 開発環境
 このプロジェクトは[PlatformIO](https://platformio.org/)を使用して開発されています。
 
-- **Board:** `seeed_xiao_esp32s3`, `seeed_xiao_esp32c3`, `seeed_xiao_esp32c3`
+- **Board:** `seeed_xiao_esp32c3`
 - **Platform:** `espressif32`
 - **Framework:** `arduino`
 
@@ -62,10 +61,8 @@ Makefileを使用してコマンドラインからビルドや書き込みを行
 環境変数 `ENV` で対象ボードを指定できます（省略時は `platformio.ini` のデフォルトまたは全環境）。
 
 ```bash
-# プロジェクトのビルド (デフォルト/全環境)
+# プロジェクトのビルド
 make build
-
-# 特定の環境を指定してビルド (例: Seeed XIAO ESP32C3)
 make ENV=seeed_xiao_esp32c3 build
 
 # ファームウェアの書き込み

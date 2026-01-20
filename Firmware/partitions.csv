@@ -1,5 +1,0 @@
-# Name,   Type, SubType, Offset,   Size,  Flags
-nvs,      data, nvs,     ,        24K,
-app,      app,  factory, ,        3M,
-# Note: subtype 'spiffs' is used for LittleFS compatibility with ESP-IDF partition tool
-storage,  data, spiffs,  ,        5056K,

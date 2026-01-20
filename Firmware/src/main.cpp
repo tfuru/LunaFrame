@@ -19,22 +19,27 @@ public:
       auto cfg = _bus_instance.config();
       cfg.spi_host = SPI2_HOST;
       cfg.spi_mode = 0;
-      cfg.freq_write = 40000000;
+      cfg.freq_write = 20000000;
       cfg.freq_read = 16000000;
       cfg.spi_3wire = true;
       cfg.use_lock = true;
       cfg.dma_channel = SPI_DMA_CH_AUTO;
-      cfg.pin_sclk = 7;  // SCL
-      cfg.pin_mosi = 9;  // SDA
+
+      // XIAO ESP32C3 Pin Mapping
+      cfg.pin_sclk = D7; // SCL
+      cfg.pin_mosi = D9; // SDA
       cfg.pin_miso = -1; // MISO
-      cfg.pin_dc = 8;    // D/C
+      cfg.pin_dc = D8;   // D/C
+
       _bus_instance.config(cfg);
       _panel_instance.setBus(&_bus_instance);
     }
     {
       auto cfg = _panel_instance.config();
-      cfg.pin_cs = 6;    // CS
-      cfg.pin_rst = 5;   // RST
+
+      cfg.pin_cs = D6;  // CS
+      cfg.pin_rst = D5; // RST
+
       cfg.pin_busy = -1; // BUSY
       cfg.panel_width = 240;
       cfg.panel_height = 240;
@@ -103,6 +108,12 @@ void setup() {
   lcd.setBrightness(128);
   lcd.fillScreen(TFT_BLACK);
 
+  // Debug: 起動確認用テキスト
+  lcd.setTextColor(TFT_WHITE);
+  lcd.setTextSize(2);
+  lcd.setCursor(10, 10);
+  lcd.println("Booting...");
+
   // ファイルシステム初期化
   if (!LittleFS.begin(true, "/littlefs", 10, "storage")) {
     // 中央位置に表示
@@ -137,7 +148,6 @@ void loop() {
   dnsServer.processNextRequest();
 
   // スライドショー更新
-  // スライドショー更新
   // 起動後 STARTUP_DELAY 経過するまでは更新しない (QRコードを表示し続ける)
   // ただし forceSlideshow が true なら即座に開始
   if ((millis() > STARTUP_DELAY || forceSlideshow) &&
@@ -166,9 +176,6 @@ void loop() {
 // ----------------------------------------------------------------------------
 // 画像表示
 // ----------------------------------------------------------------------------
-// ----------------------------------------------------------------------------
-// 画像表示
-// ----------------------------------------------------------------------------
 bool drawImage(String path) {
   if (LittleFS.exists(path)) {
     fs::File f = LittleFS.open(path);
@@ -183,6 +190,9 @@ bool drawImage(String path) {
   return false;
 }
 
+// ----------------------------------------------------------------------------
+// スライドショー更新
+// ----------------------------------------------------------------------------
 void updateSlide() {
   bool found = false;
   int nextIndex = currentSlideIndex;
@@ -339,6 +349,9 @@ void handleUpload(AsyncWebServerRequest *request, String filename, size_t index,
   }
 }
 
+// ----------------------------------------------------------------------------
+// 設定読み込み
+// ----------------------------------------------------------------------------
 void loadConfig() {
   if (LittleFS.exists("/config.txt")) {
     fs::File f = LittleFS.open("/config.txt", "r");
@@ -355,6 +368,9 @@ void loadConfig() {
   }
 }
 
+// ----------------------------------------------------------------------------
+// 設定保存
+// ----------------------------------------------------------------------------
 void saveConfig() {
   fs::File f = LittleFS.open("/config.txt", "w");
   if (f) {
