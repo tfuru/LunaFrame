@@ -157,7 +157,7 @@
 
     <div class="note">
       <p>
-        PNG画像をアップロードしてください。<br>
+        PNGまたはJPG画像をアップロードしてください。<br>
         画像は240x240ピクセルにリサイズされます。<br>
         画像アップロード後、自動的にスライドショーに反映されます。
       </p>
@@ -194,7 +194,7 @@
       input.type = 'file';
       input.id = `image-input-${i}`;
       input.name = 'image';
-      input.accept = 'image/png';
+      input.accept = 'image/png, image/jpeg, image/jpg';
 
       const deleteBtn = document.createElement('button');
       deleteBtn.innerText = '削除';
@@ -323,7 +323,7 @@
         .then(blob => {
           showStatus(`Slot ${slotId + 1} アップロード中...`, 'info');
           const formData = new FormData();
-          formData.append('image', blob, file.name);
+          formData.append('image', blob, file.name.replace(/\.[^/.]+$/, "") + ".png");
           return fetch(`/upload?id=${slotId}`, {
             method: 'POST',
             body: formData
@@ -350,26 +350,30 @@
         const img = new Image();
         img.src = URL.createObjectURL(file);
         img.onload = () => {
-          let width = img.width;
-          let height = img.height;
+          const width = img.width;
+          const height = img.height;
 
-          if (width > height) {
-            if (width > maxWidth) {
-              height = Math.round(height * (maxWidth / width));
-              width = maxWidth;
-            }
-          } else {
-            if (height > maxHeight) {
-              width = Math.round(width * (maxHeight / height));
-              height = maxHeight;
-            }
-          }
+          // アスペクト比を維持して、ターゲットサイズを完全に埋めるようにスケーリング (Cover / Center Crop)
+          const ratio = Math.max(maxWidth / width, maxHeight / height);
+
+          const newWidth = width * ratio;
+          const newHeight = height * ratio;
+
+          // 中央に描画するためのオフセット計算
+          const offsetX = (maxWidth - newWidth) / 2;
+          const offsetY = (maxHeight - newHeight) / 2;
 
           const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
+          canvas.width = maxWidth;
+          canvas.height = maxHeight;
           const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+
+          // 背景は黒（画像が全体を覆うので基本見えないが念のため）
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(0, 0, maxWidth, maxHeight);
+
+          // 画像を描画（はみ出し部分は自動的にクロップされる）
+          ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
 
           canvas.toBlob((blob) => {
             if (blob) {
