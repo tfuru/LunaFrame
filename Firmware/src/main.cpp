@@ -78,11 +78,6 @@ unsigned long lastActivity = 0;
 const unsigned long STARTUP_DELAY = 60000; // 起動後待機時間 (1分)
 bool forceSlideshow = false;
 
-// モバイルバッテリー対策用
-unsigned long lastDummyLoadTime = 0;
-const unsigned long DUMMY_LOAD_INTERVAL = 10000; // 10秒ごと
-const unsigned long DUMMY_LOAD_DURATION = 200;   // 200ms負荷をかける
-
 // ----------------------------------------------------------------------------
 // 関数プロトタイプ
 // ----------------------------------------------------------------------------
@@ -99,8 +94,8 @@ void saveConfig();
 // セットアップ
 // ----------------------------------------------------------------------------
 void setup() {
-  // パフォーマンス設定 (モバイルバッテリーの自動OFF対策)
-  setCpuFrequencyMhz(240); // CPU周波数を240MHzに設定
+  // パフォーマンス設定
+  setCpuFrequencyMhz(160); // CPU周波数を160MHzに設定 (通常)
 
   // LCD初期化
   lcd.begin();
@@ -159,15 +154,6 @@ void loop() {
   if (WiFi.getMode() == WIFI_AP && (millis() - lastActivity > wifiTimeout)) {
     lcd.println("Wi-Fi timeout.");
     WiFi.mode(WIFI_OFF);
-  }
-  // モバイルバッテリー対策: 定期的なダミー負荷
-  if (millis() - lastDummyLoadTime > DUMMY_LOAD_INTERVAL) {
-    unsigned long start = millis();
-    while (millis() - start < DUMMY_LOAD_DURATION) {
-      // ビジーループで電力を消費させる
-      __asm__ __volatile__("nop");
-    }
-    lastDummyLoadTime = millis();
   }
 
   delay(10);
