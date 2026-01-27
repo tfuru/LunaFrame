@@ -99,7 +99,7 @@ void setup() {
 
   // LCD初期化
   lcd.begin();
-  lcd.setRotation(2);
+  // lcd.setRotation(2);
   lcd.setBrightness(128);
   lcd.fillScreen(TFT_BLACK);
 
