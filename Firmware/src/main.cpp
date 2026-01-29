@@ -66,7 +66,7 @@ public:
 static LGFX lcd;
 AsyncWebServer server(80);
 DNSServer dnsServer;
-const char *ssid = "PopLinkBadge";
+const char *ssid = "LunaFrame";
 const char *password = NULL; // パスワードなし
 
 const int MAX_IMAGES = 5;
