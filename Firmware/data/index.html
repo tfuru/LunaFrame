@@ -139,6 +139,44 @@
       登録された画像は自動的に切り替わります。
     </p>
     <div class="tabs" id="tabs-container"></div>
+    <div id="cp-warning"
+      style="background-color: #fff3cd; color: #856404; padding: 15px; border: 1px solid #ffeeba; border-radius: 4px; margin-bottom: 20px; display: none;">
+      <strong>⚠️ 注意:</strong><br>
+      Wi-Fi接続画面(キャプティブポータル)ではファイルアップロードが機能しない場合があります。<br>
+      その場合は、以下のURLをコピーして Safari や Chrome で開いてください。<br>
+      <div style="margin-top: 10px; display: flex;">
+        <input type="text" value="http://192.168.4.1" id="url-input" readonly style="flex-grow: 1; margin-right: 10px;">
+        <button onclick="copyUrl()" style="padding: 5px 10px; cursor: pointer;">Copy</button>
+      </div>
+    </div>
+    <script>
+      // 簡易的な判定: キャプティブポータルの場合、URLがIP直打ちでない場合や特定のUAなどがあるが、
+      // 確実に判定するのは難しい。
+      // ここでは、ユーザーが迷わないように「常に表示」するか、
+      // もしくは「アップロード失敗時」に表示する手もあるが、事前警告として表示する。
+      // ただし、既に正しく開いている人には邪魔なので、
+      // 「現在のURLが 192.168.4.1 でない」あるいは「モバイル端末」の場合に出すなど工夫する。
+      // 今回はシンプルに、常に表示するが、閉じるボタンをつける形でも良いが、
+      // ユーザーの要望に応えるため、まずは表示ロジックを入れる。
+
+      // とりあえずモバイルの場合に表示する（PCなら通常ブラウザ操作なので）
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        document.getElementById('cp-warning').style.display = 'block';
+      }
+
+      function copyUrl() {
+        const copyText = document.getElementById("url-input");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        navigator.clipboard.writeText(copyText.value).then(() => {
+          alert("URLをコピーしました: " + copyText.value);
+        }, (err) => {
+          // クリップボードAPIが使えない場合(非セキュアコンテキストなど)のフォールバック
+          document.execCommand('copy');
+          alert("URLをコピーしました");
+        });
+      }
+    </script>
     <div id="slots-container"></div>
     <div id="status-message"></div>
 
@@ -239,6 +277,7 @@
       img.onerror = () => { img.style.display = 'none'; };
 
       img.src = `image${i}.png?t=${new Date().getTime()}`;
+
 
       previewContainer.appendChild(img);
 
@@ -350,42 +389,26 @@
         const img = new Image();
         img.src = URL.createObjectURL(file);
         img.onload = () => {
-          const width = img.width;
-          const height = img.height;
-
-          // アスペクト比を維持して、ターゲットサイズを完全に埋めるようにスケーリング (Cover / Center Crop)
-          const ratio = Math.max(maxWidth / width, maxHeight / height);
-
-          const newWidth = width * ratio;
-          const newHeight = height * ratio;
-
-          // 中央に描画するためのオフセット計算
-          const offsetX = (maxWidth - newWidth) / 2;
-          const offsetY = (maxHeight - newHeight) / 2;
-
           const canvas = document.createElement('canvas');
           canvas.width = maxWidth;
           canvas.height = maxHeight;
           const ctx = canvas.getContext('2d');
 
-          // 背景は黒（画像が全体を覆うので基本見えないが念のため）
+          // 黒背景
           ctx.fillStyle = '#000000';
           ctx.fillRect(0, 0, maxWidth, maxHeight);
 
-          // 画像を描画（はみ出し部分は自動的にクロップされる）
-          ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
+          const scale = Math.max(maxWidth / img.width, maxHeight / img.height);
+          const x = (maxWidth / 2) - (img.width / 2) * scale;
+          const y = (maxHeight / 2) - (img.height / 2) * scale;
+          ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
 
           canvas.toBlob((blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error('CanvasからBlobへの変換に失敗しました。'));
-            }
+            if (blob) resolve(blob);
+            else reject(new Error('Canvas conversion failed'));
           }, 'image/png');
         };
-        img.onerror = (error) => {
-          reject(new Error('画像の読み込みに失敗しました。'));
-        };
+        img.onerror = (error) => reject(new Error('Image load failed'));
       });
     }
 
